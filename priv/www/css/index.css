@@ -1,0 +1,33 @@
+pre[docker-url] {
+    max-height: 50em;
+    overflow-y: scroll;
+}
+
+pre[docker-url]>p {
+    margin: 0px;
+}
+
+pre[docker-url]>p:nth-child(odd) {
+    background: rgb(211, 211, 211);
+}
+
+pre[docker-url]>p:nth-child(even) {
+    background: rgb(222, 222, 222);
+}
+
+pre[docker-url]::before {
+    content: attr(docker-url);
+    display: block;
+    left: 1em;
+    font-weight: bold;
+    padding-right: 10px;
+}
+
+form {
+    /* border: dotted black 1px; */
+    width: fit-content;
+}
+
+form>* {
+    margin: .1em;
+}

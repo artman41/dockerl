@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>title</title>
+        <link rel="stylesheet" href="/css/index.css">
+    </head>
+    <body>
+        <h1>Urls</h1>
+        <pre docker-url="/images/json"></pre>
+        <pre docker-url="/containers/json?all"></pre>
+
+        <form>
+            <select name="Image" id="image">
+                <option>ubuntu</option>
+            </select>
+            <br>
+            <input type="text" name="Name" placeholder="name" optional>
+            <br>
+            <input type="text" name="Entrypoint" placeholder="entrypoint" optional>
+            <br>
+            <input type="text" name="Cmd" placeholder="cmd" optional>
+            <br>
+            <input type="button" onclick="create_container(event.target.parentElement)" value="Create">
+        </form>
+
+    </body>
+
+    <script>
+        function poll_urls() {
+            async function do_poll(elem) {
+                let url = elem.getAttribute("docker-url");
+                if(url === null)
+                    return;
+                fetch("/api/socket/direct" + url).then(async o => { 
+                    let text = await o.text();
+                    try {
+                        let obj = JSON.parse(text);
+                        text = JSON.stringify(obj, null, 4);
+                    } catch(_){};
+                    elem.innerHTML = "";
+                    text.split("\n").forEach(line => {
+                        let p = document.createElement("p");
+                        p.innerText = line;
+                        elem.appendChild(p);
+                    });
+                });
+            }
+
+            let nodes = document.querySelectorAll("[docker-url]");
+            for(let i=0; i<nodes.length; i++) {
+                const node = nodes[i];
+                do_poll(node);
+                setInterval(do_poll, 1000, node);
+            }
+        }
+
+        function create_container(formElem) {
+            let obj = {};
+            const children = formElem.childNodes;
+            for(let i=0; i<children.length; i++) {
+                const node = children[i];
+                if(!(node instanceof(HTMLElement)))
+                    continue;
+                console.log("node: %O", node);
+                const name = node.getAttribute("name");
+                if(name === null || name === "")
+                    continue;
+                const value = node.value;
+                if(value === undefined || (value === "" && node.getAttribute("optional") !== null))
+                    continue;
+                obj[name] = value;
+            }
+            fetch("/api/socket/direct/containers/create", {
+                method: "POST",
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify(obj)
+            }).then(res => {
+                console.log("Request complete! response:", res);
+            });
+        }
+
+        window.addEventListener("load", poll_urls);
+    </script>
+    
+</html>
