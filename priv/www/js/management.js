@@ -3,6 +3,141 @@
     function onload(_event) {
     }
 
+    window.dockerCard = (function() {
+        let obj = {};
+
+        function create(opts) {
+            if(!opts.title || !opts.subtitle || !(opts.data && opts.data instanceof Array && opts.data.length > 0))
+                throw {message: "Missing options!", args: [opts]}
+
+            const klasses = ["docker-card", "docker-card-header", "docker-card-info", "docker-card-status"];
+            let [divCard, divCardHeader, divCardInfo, divCardStatus] = 
+                klasses.map(klass => {
+                    let div = document.createElement("div");
+                    div.classList.add(klass);
+                    return div;
+                });
+
+            let title = document.createElement("h4");
+            function setTitle(text) {
+                title.textContent = text;
+            }
+            divCard.setTitle = setTitle.bind(divCard);
+            divCard.setTitle(opts.title ? opts.title : "");
+
+            let subtitle = document.createElement("h5");
+            function setSubtitle(text) {
+                subtitle.textContent = text;
+            }
+            divCard.setSubtitle = setSubtitle.bind(divCard);
+            divCard.setSubtitle(opts.subtitle ? opts.subtitle : "");
+
+            divCardHeader.append(title, subtitle);
+            divCard.appendChild(divCardHeader);
+
+            let table = document.createElement("table");
+            table.classList.add("table", "table-sm");
+
+            function setData(data) {
+                if(!(data instanceof Array))
+                    throw {message: "Data should be an array!", args: [data]};
+                for(let tableN=0; tableN<data.length/3; tableN++) {
+                    let from = tableN*3;
+                    let to = from+3;
+                    table.tBodies.length = 0;
+                    let tbody = table.createTBody();
+                    tbody.setAttribute("active", tableN === 0);
+    
+                    if(to > data.length-1)
+                        to = data.length;
+                    for(let i=from; i<to; i++) {
+                        const {name: name, value: value} = data[i];
+                        let row = tbody.insertRow();
+                        
+                        row.insertCell().innerText = name;
+                        let rowVal = row.insertCell();
+                        if(!(value instanceof Array)) {
+                            rowVal.innerText = value;
+                            continue;
+                        }
+                        let arrows = document.createElement("arrows");
+                        arrows.append(...value.map(o => {
+                            let span = document.createElement("span");
+                            span.innerText = o;
+                            return span;
+                        }));
+                        replaceArrow(arrows);
+                        rowVal.appendChild(arrows);
+                    }
+                }
+            }
+
+            divCard.setData = setData.bind(divCard);
+
+            divCard.setData(opts.data ? opts.data : []);
+
+            divCardInfo.appendChild(table);
+            divCard.appendChild(divCardInfo);
+
+            let spanStatus = document.createElement("span");
+            spanStatus.innerText = "Status: ";
+            let spanData = document.createElement("span");
+            spanData.classList.add("data");
+
+            function setStatus(text) {
+                spanData.innerText = text;
+            }
+            divCard.setStatus = setStatus.bind(divCard);
+            if(opts.status)
+                divCard.setStatus(opts.status);
+
+            let spanCarousel = document.createElement("span");
+            spanCarousel.classList.add("carousel");
+
+            let buttonLT = document.createElement("button");
+            buttonLT.innerText = "<";
+            buttonLT.addEventListener("click", _event => {
+                const tbodies = table.tBodies;
+                for(let i=0; i<tbodies.length; i++) {
+                    const tbody = tbodies[i];
+                    if(tbody.getAttribute("active") !== "true")
+                        continue;
+                    if(i !== 0){
+                        tbody.setAttribute("active", "false");
+                        tbodies[i-1].setAttribute("active", "true");
+                    }
+                    break;
+                }
+            })
+            let buttonGT = document.createElement("button");
+            buttonGT.addEventListener("click", _event => {
+                const tbodies = table.tBodies;
+                for(let i=0; i<tbodies.length; i++) {
+                    const tbody = tbodies[i];
+                    if(tbody.getAttribute("active") !== "true")
+                        continue;
+                    if(i !== tbodies.length-1){
+                        tbody.setAttribute("active", "false");
+                        tbodies[i+1].setAttribute("active", "true");
+                    }
+                    break;
+                }
+            })
+            buttonGT.innerText = ">";
+
+            spanCarousel.append(buttonLT, buttonGT);
+            divCardStatus.append(spanStatus, spanData, spanCarousel)
+
+            divCard.appendChild(divCardStatus);
+
+            return divCard;
+        }
+
+        obj.create = create.bind(obj);
+
+        return obj;
+    })();
+
     window.addEventListener("load", onload);
 })();
 
