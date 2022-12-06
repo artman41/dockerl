@@ -1,0 +1,42 @@
+<div class="docker-card">
+    <script>
+        console.log("document.readyState: %O", document.readyState);
+        if(document.readyState === "complete" || document.readyState === "interactive"){
+            const parent = document.currentScript.parentNode;
+            parent.querySelectorAll("arrows").forEach(replaceArrow);
+        }
+    </script>
+    <div class="docker-card-header">
+        <h4>My Container</h4>
+        <h5>ubuntu:latest</h5>
+    </div>
+    <div class="docker-card-info">
+        <table class="table table-sm">
+            <tr>
+                <td>Command</td>
+                <td>/bin/bash</td>
+            </tr>
+            <tr>
+                <td>Container ID</td>
+                <td>a55dca22e93f</td>
+            </tr>
+            <tr>
+                <td>Ports</td>
+                <td>
+                    <arrows>
+                        <span>8080:8080</span>
+                        <span>34179:34179</span>
+                    </arrows>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="docker-card-status">
+        <span>Status: </span>
+        <span class="data">Running</span>
+        <span class="carousel">
+            <button>&lt;</button>
+            <button>&gt;</button>
+        </span>
+    </div>
+</div>
