@@ -43,12 +43,10 @@ handle(Method, [<<"socket">>, <<"direct">> | Tail], Headers, Req0, Opts) ->
                 ContentType = maps:get(<<"content-type">>, Headers, <<"application/x-www-form-urlencoded">>),
                 {Req, fun docker_sock:request/5, [AtomMethod, Path, ReqHeaders, binary_to_list(ContentType), iolist_to_binary(Data)]}
         end,
-    lager:info("Fun: ~p, Args: ~p~n", [F, A]),
     Req2 = 
         case erlang:apply(F, A) of
             {ok, {{_, HTTPCode, _}, DockerHeaders, RespBody}} ->
                 RespHeaders = maps:from_list([{list_to_binary(K), list_to_binary(V)} || {K,V} <- DockerHeaders]),
-                lager:info("HTTPCode: ~p, RespHeaders: ~p, RespBody: ~p~n", [HTTPCode, RespHeaders, RespBody]),
                 cowboy_req:reply(HTTPCode, RespHeaders, RespBody, Req1);
             Err = {error, _} ->
                 cowboy_req:reply(500, #{}, io_lib:format("Request failed with error ~p~n", [Err]), Req1)
