@@ -1,4 +1,15 @@
 (function() {
+
+    /**
+     * @param {String} HTML representing a single element
+     * @return {Element}
+     */
+    function htmlToElement(html) {
+        var template = document.createElement('template');
+        html = html.trim(); // Never return a text node of whitespace as the result
+        template.innerHTML = html;
+        return template.content.firstChild;
+    }
     
     function onload(_event) {
     }
@@ -10,127 +21,95 @@
             if(!opts.title || !opts.subtitle || !(opts.data && opts.data instanceof Array && opts.data.length > 0))
                 throw {message: "Missing options!", args: [opts]}
 
-            const klasses = ["docker-card", "docker-card-header", "docker-card-info", "docker-card-status"];
-            let [divCard, divCardHeader, divCardInfo, divCardStatus] = 
-                klasses.map(klass => {
-                    let div = document.createElement("div");
-                    div.classList.add(klass);
-                    return div;
-                });
+            let dockerCard = htmlToElement(`<div class="docker-card">
+                <div class="docker-card-header">
+                    <h4 name="title"></h4>
+                    <h5 name="subtitle"></h5>
+                    <span class="close"></span>
+                </div>
+                <div class="docker-card-info">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="docker-card-status">
+                    <span>Status: </span>
+                    <span class="data"></span>
+                </div>
+            </div>`);
 
-            let title = document.createElement("h4");
+            const title = dockerCard.querySelector(".docker-card-header>h4[name='title']");
             function setTitle(text) {
                 title.textContent = text;
             }
-            divCard.setTitle = setTitle.bind(divCard);
-            divCard.setTitle(opts.title ? opts.title : "");
+            dockerCard.setTitle = setTitle.bind(dockerCard);
+            dockerCard.setTitle(opts.title ? opts.title : "");
 
-            let subtitle = document.createElement("h5");
+            const subtitle = dockerCard.querySelector(".docker-card-header>h5[name='subtitle']");
             function setSubtitle(text) {
                 subtitle.textContent = text;
             }
-            divCard.setSubtitle = setSubtitle.bind(divCard);
-            divCard.setSubtitle(opts.subtitle ? opts.subtitle : "");
+            dockerCard.setSubtitle = setSubtitle.bind(dockerCard);
+            dockerCard.setSubtitle(opts.subtitle ? opts.subtitle : "");
 
-            divCardHeader.append(title, subtitle);
-            divCard.appendChild(divCardHeader);
+            // const spanClose = dockerCard.querySelector(".docker-card-header>span.close");
 
-            let table = document.createElement("table");
-            table.classList.add("table", "table-sm");
+            const table = dockerCard.querySelector('.docker-card-info>table');
+            const templateDataRow = `<tr active="false"><td name="key"></td><td name="value"></td></tr>`;
 
             function setData(data) {
                 if(!(data instanceof Array))
                     throw {message: "Data should be an array!", args: [data]};
-                for(let tableN=0; tableN<data.length/3; tableN++) {
-                    let from = tableN*3;
-                    let to = from+3;
-                    table.tBodies.length = 0;
-                    let tbody = table.createTBody();
-                    tbody.setAttribute("active", tableN === 0);
-    
-                    if(to > data.length-1)
-                        to = data.length;
-                    for(let i=from; i<to; i++) {
-                        const {name: name, value: value} = data[i];
-                        let row = tbody.insertRow();
-                        
-                        row.insertCell().innerText = name;
-                        let rowVal = row.insertCell();
-                        if(!(value instanceof Array)) {
-                            rowVal.innerText = value;
-                            continue;
-                        }
-                        let arrows = document.createElement("arrows");
-                        arrows.append(...value.map(o => {
-                            let span = document.createElement("span");
-                            span.innerText = o;
-                            return span;
-                        }));
-                        replaceArrow(arrows);
-                        rowVal.appendChild(arrows);
-                    }
+
+                console.log("table: %O", table);
+                console.log("table.body: %O", table.body);
+                table.tBodies[0].remove();
+                let tbody = table.createTBody();
+                for(let i=0; i<data.length; i++) {
+                    let row = htmlToElement(templateDataRow);
+                    row.setAttribute("key", data[i].name);
+                    console.log("row: %O", row);
+                    console.log("key: %O", row.querySelector("[name='key']"))
+                    row.querySelector("[name='key']").innerText = data[i].name;
+                    row.querySelector("[name='value']").innerText = data[i].value;
+                    tbody.appendChild(row);
                 }
             }
 
-            divCard.setData = setData.bind(divCard);
+            dockerCard.setData = setData.bind(dockerCard);
+            dockerCard.setData(opts.data ? opts.data : []);
 
-            divCard.setData(opts.data ? opts.data : []);
+            function updateData(data) {
+                if(!(data instanceof Array))
+                    throw {message: "Data should be an array!", args: [data]};
 
-            divCardInfo.appendChild(table);
-            divCard.appendChild(divCardInfo);
+                const tbody = table.tBodies[0];
+                for(let i=0; i<data.length; i++) {
+                    let row = table.querySelector(`[key='${data[i].name}']`);
+                    if(row !== null) {
+                        row.querySelector("[name='value']").innerText = data[i].value;
+                        continue;
+                    }
+                    row = htmlToElement(templateDataRow);
+                    row.querySelector("[name='key']").innerText = data[i].name;
+                    row.querySelector("[name='value']").innerText = data[i].value;
+                    if(tbody.rows.length <= 3)
+                        row.setAttribute("active", "true");
+                    tbody.appendChild(row);
+                }
+            }
+            dockerCard.updateData = updateData.bind(dockerCard);
 
-            let spanStatus = document.createElement("span");
-            spanStatus.innerText = "Status: ";
-            let spanData = document.createElement("span");
-            spanData.classList.add("data");
+            const spanData = dockerCard.querySelector('.docker-card-status>span.data');
 
             function setStatus(text) {
                 spanData.innerText = text;
             }
-            divCard.setStatus = setStatus.bind(divCard);
+            dockerCard.setStatus = setStatus.bind(dockerCard);
             if(opts.status)
-                divCard.setStatus(opts.status);
+                dockerCard.setStatus(opts.status);
 
-            let spanCarousel = document.createElement("span");
-            spanCarousel.classList.add("carousel");
-
-            let buttonLT = document.createElement("button");
-            buttonLT.innerText = "<";
-            buttonLT.addEventListener("click", _event => {
-                const tbodies = table.tBodies;
-                for(let i=0; i<tbodies.length; i++) {
-                    const tbody = tbodies[i];
-                    if(tbody.getAttribute("active") !== "true")
-                        continue;
-                    if(i !== 0){
-                        tbody.setAttribute("active", "false");
-                        tbodies[i-1].setAttribute("active", "true");
-                    }
-                    break;
-                }
-            })
-            let buttonGT = document.createElement("button");
-            buttonGT.addEventListener("click", _event => {
-                const tbodies = table.tBodies;
-                for(let i=0; i<tbodies.length; i++) {
-                    const tbody = tbodies[i];
-                    if(tbody.getAttribute("active") !== "true")
-                        continue;
-                    if(i !== tbodies.length-1){
-                        tbody.setAttribute("active", "false");
-                        tbodies[i+1].setAttribute("active", "true");
-                    }
-                    break;
-                }
-            })
-            buttonGT.innerText = ">";
-
-            spanCarousel.append(buttonLT, buttonGT);
-            divCardStatus.append(spanStatus, spanData, spanCarousel)
-
-            divCard.appendChild(divCardStatus);
-
-            return divCard;
+            return dockerCard;
         }
 
         obj.create = create.bind(obj);

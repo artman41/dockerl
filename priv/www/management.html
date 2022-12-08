@@ -34,26 +34,47 @@
             <script src="/js/management.js"></script>
             <script>
                 (async function() {
-                    let fetched = await fetch("/api/socket/direct/images/json");
-                    if(!fetched.ok)
-                        return;
-                    let json = await fetched.text();
-                    let objects = JSON.parse(json);
-                    for(let i=0; i<objects.length; i++) {
-                        const obj = objects[i];
-                        let card = dockerCard.create({
-                            title: obj["RepoTags"][0],
-                            subtitle: obj["Id"].split(":")[1].slice(0, 8),
-                            data: [
-                                {name: "Created", value: new Date(obj["Created"]*1000).toISOString()},
-                                {name: "Containers", value: obj["Containers"]},
-                                {name: "Size", value: obj["Size"]},
-                                {name: "RepoTags", value: obj["RepoTags"]},
-                                {name: "RepoDigests", value: obj["RepoDigests"]}
-                            ]
-                        });
-                        document.getElementById("card_container").appendChild(card);
+                    async function getOpts() {
+                        let fetched = await fetch("/api/socket/direct/images/json");
+                        if(!fetched.ok)
+                            return;
+                        let json = await fetched.text();
+                        let objects = JSON.parse(json);
+                        return objects.map(obj => {
+                            let id = obj["Id"].split(":")[1].slice(0, 8);
+                            return {
+                                id: id,
+                                title: obj["RepoTags"][0],
+                                subtitle: id,
+                                data: [
+                                    {name: "Created", value: new Date(obj["Created"]*1000).toISOString()},
+                                    {name: "Containers", value: obj["Containers"]},
+                                    {name: "Size", value: obj["Size"]},
+                                    {name: "RepoTags", value: obj["RepoTags"]},
+                                    {name: "RepoDigests", value: obj["RepoDigests"]}
+                                ]
+                            }
+                        })
                     }
+                    
+                    async function updateCards() {
+                        let opts = await getOpts();
+                        for(let i = 0; i < opts.length; i++) {
+                            const opt = opts[i];
+                            let card = document.getElementById(opt.id);
+                            if(card === null){
+                                card = dockerCard.create(opt);
+                                card.id = opt.id;
+                                document.getElementById("card_container").appendChild(card);
+                            } else {
+                                card.setTitle(opt.title);
+                                card.setSubtitle(opt.subtitle);
+                                card.setData(opt.data);
+                            }
+                        }
+                    }
+
+                    updateCards();
                 })();
             </script>
         </span>

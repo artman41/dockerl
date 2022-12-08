@@ -3,9 +3,12 @@
 }
 
 .docker-card{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
     border: 1px solid black;
-    min-width: 16em;
-    max-width: 16em;
+    min-width: 18em;
+    max-width: 18em;
     min-height: 10em;
     max-height: 10em;
     box-shadow: 0 4px 4px rgb(0 0 0 / 30%);
@@ -18,7 +21,7 @@
     background-color: rgba(0, 0, 0, 0.3);
     padding: 4px;
     margin: 0;
-    min-height: 3em;
+    height: 3em;
     margin-bottom: 2px;
     position: relative;
     text-shadow: 2px 2px 2px rgb(0 0 0 / 70%);
@@ -38,34 +41,60 @@
     font-size: 0.83em !important;
 }
 
+.docker-card>.docker-card-header>.close {
+    position: relative;
+    top: -2em;
+    padding: 0.1em;
+    cursor: pointer;
+}
+.docker-card>.docker-card-header>.close::after {
+    content: "⟳";
+    font-weight: bold;
+    font-size: 18px;
+}
+
 .docker-card>.docker-card-info {
     top: -0.2em;
     font-size: 10pt;
-    position: relative;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+    overflow-y: auto;
     height: calc(100% - 84px);
+    width: 100%;
 }
 
 .docker-card>.docker-card-info table {
     line-height: initial !important;
     border-collapse: collapse;
-    width: 100%;
-    display: inline-table;
     transition: transform 0.5s ease;
     margin-bottom: 0px;
 }
 
-.docker-card>.docker-card-info table tbody {
-    display: none;
-    border-top: none;
-}
-
-.docker-card>.docker-card-info table tbody[active="true"] {
-    display: table-row-group;
-}
-
 .docker-card>.docker-card-info table tr>td {
     padding: .3em;
+    overflow-x: auto;
+    max-width: 10em;
+}
+
+.docker-card>.docker-card-info table tr>td::-webkit-scrollbar {
+    width: 1em;
+    height: .3em;
+}
+
+/* Track */
+.docker-card>.docker-card-info table tr>td::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* Handle */
+.docker-card>.docker-card-info table tr>td::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+/* Handle on hover */
+.docker-card>.docker-card-info table tr>td::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 .docker-card>.docker-card-info table tr>td:nth-child(1) {
@@ -97,49 +126,4 @@
     border: 0px;
     font-weight: bold;
     background-color: transparent;
-}
-
-arrows {
-    display: none;
-}
-
-arrows .pointer {
-    position: relative;
-    cursor: pointer;
-    user-select: none;
-    font-weight: bold;
-}
-
-arrows[active="true"] {
-    display: block;
-}
-
-arrows>[active="false"]{
-    display: none;
-}
-
-arrows>span {
-    overflow-x: auto;
-    display: inline-block;
-    max-width: 10em;
-}
-
-arrows>span::-webkit-scrollbar {
-    width: 1em;
-    height: .3em;
-}
-
-/* Track */
-arrows>span::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-/* Handle */
-arrows>span::-webkit-scrollbar-thumb {
-    background: #888;
-}
-
-/* Handle on hover */
-arrows>span::-webkit-scrollbar-thumb:hover {
-    background: #555;
 }
