@@ -35,6 +35,9 @@
                 <div class="docker-card-status">
                     <span>Status: </span>
                     <span class="data"></span>
+                    <select>
+                        <option value="" disabled selected hidden>Actions</option>
+                    </select>
                 </div>
             </div>`);
 
@@ -108,6 +111,23 @@
             dockerCard.setStatus = setStatus.bind(dockerCard);
             if(opts.status)
                 dockerCard.setStatus(opts.status);
+
+            const actions = dockerCard.querySelector('.docker-card-status>select');
+            if(opts.actions && opts.actions instanceof Array)
+                for(let i=0; i< opts.actions.length; i++) {
+                    let {value: v, func: f} = opts.actions[i];
+                    if(!v || !f || !(f instanceof Function))
+                        continue;
+                    let option = htmlToElement(`<option>${v}</option>`);
+                    actions.addEventListener("change", event => {
+                        const selected = event.target.selectedIndex;
+                        if(selected !== i+1 && event.target.options[selected] !== option)
+                            return;
+                        event.target.selectedIndex = 0;
+                        f(option);
+                    });
+                    actions.appendChild(option);
+                }
 
             return dockerCard;
         }

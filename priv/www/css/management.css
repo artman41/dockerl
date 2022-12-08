@@ -118,12 +118,14 @@
     border: 1px solid rgba(0, 0, 0, 0.3);
 }
 
-.docker-card>.docker-card-status .carousel {
-    float: right;
+.docker-card>.docker-card-status>.data {
+    min-width: 7.5em;
+    display: inline-block;
 }
 
-.docker-card>.docker-card-status .carousel button {
-    border: 0px;
-    font-weight: bold;
-    background-color: transparent;
+.docker-card>.docker-card-status>select {
+    position: relative;
+    right: 0px;
+    top: 1%;
+    font-size: 12px;
 }

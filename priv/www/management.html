@@ -40,6 +40,9 @@
                             return;
                         let json = await fetched.text();
                         let objects = JSON.parse(json);
+                        function defaultAction(option) {
+                            console.log("%O was chosen!", option);
+                        }
                         return objects.map(obj => {
                             let id = obj["Id"].split(":")[1].slice(0, 8);
                             return {
@@ -52,6 +55,10 @@
                                     {name: "Size", value: obj["Size"]},
                                     {name: "RepoTags", value: obj["RepoTags"]},
                                     {name: "RepoDigests", value: obj["RepoDigests"]}
+                                ],
+                                actions: [
+                                    {value: "inspect", func: defaultAction},
+                                    {value: "create container", func: defaultAction}
                                 ]
                             }
                         })
