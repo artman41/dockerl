@@ -1,9 +1,14 @@
 {
-	"folders": [
-		{"path": ".."},
-		{"path": "/usr/lib/erlang/lib"}
-	],
-	"settings": {
-		"vscord.enabled": true
-	}
+  "folders": [
+    {
+      "path": ".."
+    },
+    {
+      "name": "erlang",
+      "path": "/usr/lib/erlang/lib"
+    }
+  ],
+  "settings": {
+    "vscord.enabled": true
+  }
 }
