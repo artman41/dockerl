@@ -17,4 +17,18 @@ SHELL_OPTS += -eval 'application:ensure_all_started($(PROJECT)).'
 
 ERLC_OPTS += +'{parse_transform, lager_transform}'
 
+noop=
+space = $(noop) $(noop)
+comma = ,
+
+define JOIN_WORDS
+$(subst $(space),$(2),$(1))
+endef
+
 include erlang.mk
+
+deps::
+	$(gen_verbose) git checkout -- .vscode/dockerl.code-workspace && \
+	file=`mktemp` && \
+	jq '.folders |= . + [$(call JOIN_WORDS,$(foreach depdir,$(ALL_DEPS_DIRS),{"name":"dep:$(notdir $(depdir))","path":"$(depdir)"}),$(comma))]' .vscode/dockerl.code-workspace > $$file && \
+	mv $$file .vscode/dockerl.code-workspace;
