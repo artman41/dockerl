@@ -1,3 +1,7 @@
+.no-transition * {
+    transition: none !important;
+}
+
 * {
     --theme-transition-time: 1s;
     --docker-card-min-width: 18em;
@@ -15,7 +19,8 @@ body.dark * {
     --border-colour: black;
     --background-colour: #28292a;
     --content-background-colour: #242424;
-    --nav-link-colour: rgba(255,255,255,.9);
+    --nav-link-colour: 255,255,255;
+    --nav-link-alpha: .8;
     --a-colour: #66b0ff;
     --a-hover-colour: #438bd8;
     transition: background .2s ease-in, border-color .2s ease-in;
@@ -31,7 +36,8 @@ body.light * {
     --border-colour: #dee2e6;
     --background-colour: #f8f9fa;
     --content-background-colour: white;
-    --nav-link-colour: rgba(0,0,0,.5);
+    --nav-link-colour: 0,0,0;
+    --nav-link-alpha: .5;
     --a-colour: #007bff;
     --a-hover-colour: #0056b3;
     transition: background .2s ease-in, border-color .2s ease-in;
@@ -54,7 +60,11 @@ body[data-popup="true"]>#dom-wrapper {
 }
 
 .navbar .navbar-nav .nav-link {
-    color: var(--nav-link-colour) !important;
+    color: rgba(var(--nav-link-colour), var(--nav-link-alpha)) !important;
+}
+
+.navbar .navbar-nav .nav-link.active {
+    color: rgba(var(--nav-link-colour), 1) !important;
 }
 
 .border-left,.border-right,.border-top,.border-bottom {
@@ -232,7 +242,6 @@ body[data-popup="true"]>#popup {
     animation-iteration-count: infinite;
     animation-timing-function: linear; 
     transform-origin: 50% 58%;
-    font-weight: bold;
 }
 
 @keyframes spin {

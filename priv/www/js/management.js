@@ -393,6 +393,14 @@ function replaceArrow(arrow) {
                 return acc;
             }, 0);
     }
+    function replaceTheme(classList) {
+        if(classList.contains("light")) {
+            classList.replace("light", "dark");
+            return "dark";
+        }
+        classList.replace("dark", "light");
+        return "light";
+    }
     function toggleTheme() {
         const classList = document.body.classList;
         if(transitionTimer !== undefined) {
@@ -405,10 +413,12 @@ function replaceArrow(arrow) {
         classList.add("theme-transition");
         let time = window.getComputedStyle(document.body).getPropertyValue("--theme-transition-time");
         transitionTimer = setTimeout(() => classList.remove("theme-transition"), humanToMillis(time));
-        if(classList.contains("light"))
-            classList.replace("light", "dark");
-        else
-            classList.replace("dark", "light");
+        localStorage.setItem("wasDarkMode", replaceTheme(classList) === "dark")
     }
     document.body.toggleTheme = toggleTheme.bind(document.body);
+    if(localStorage.getItem("wasDarkMode") === "true"){
+        document.body.classList.add("no-transition");
+        replaceTheme(document.body.classList);
+        setTimeout(() => document.body.classList.remove("no-transition"), 1);
+    }
 })();
