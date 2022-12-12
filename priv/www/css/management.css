@@ -1,3 +1,42 @@
+* {
+    --theme-transition-time: 1s;
+    --docker-card-min-width: 18em;
+    --docker-card-min-height: 10em;
+    --docker-card-max-width: 18em;
+    --docker-card-max-height: 10em;
+}
+body.dark * {
+    --docker-primary: rgb(8, 72, 155);
+    --docker-secondary: #20242c;
+    --docker-tertiary: #1C262D;
+    --docker-card-gripper: rgb(5, 57, 124);
+    --font-colour: white;
+    --text-shadow-colour: rgb(0 0 0 / 70%);
+    --border-colour: black;
+    --background-colour: #28292a;
+    --content-background-colour: #242424;
+    --nav-link-colour: rgba(255,255,255,.9);
+    --a-colour: #66b0ff;
+    --a-hover-colour: #438bd8;
+    transition: background .2s ease-in, border-color .2s ease-in;
+}
+
+body.light * {
+    --docker-primary: #086DD7;
+    --docker-secondary: white;
+    --docker-tertiary: rgb(250, 250, 250);
+    --docker-card-gripper: rgb(34, 128, 219);
+    --font-colour: black;
+    --text-shadow-colour: rgb(0 0 0 / 20%);
+    --border-colour: #dee2e6;
+    --background-colour: #f8f9fa;
+    --content-background-colour: white;
+    --nav-link-colour: rgba(0,0,0,.5);
+    --a-colour: #007bff;
+    --a-hover-colour: #0056b3;
+    transition: background .2s ease-in, border-color .2s ease-in;
+}
+ 
 body[data-popup="true"]>#dom-wrapper {
     -webkit-filter: blur(5px);
     -moz-filter: blur(5px);
@@ -6,41 +45,52 @@ body[data-popup="true"]>#dom-wrapper {
     filter: blur(5px);
 }
 
+.bg {
+    background-color: var(--background-colour);
+}
+
+.container-fluid.bg {
+    background-color: var(--content-background-colour);
+}
+
+.navbar .navbar-nav .nav-link {
+    color: var(--nav-link-colour) !important;
+}
+
+.border-left,.border-right,.border-top,.border-bottom {
+    border-color: var(--border-colour) !important;
+}
+
+a {
+    color: var(--a-colour) !important;
+}
+a:hover {
+    color: var(--a-hover-colour) !important;
+}
+
 body[data-popup="true"]>#popup {
     display: block
 }
 
-#popup{
+#popup {
     display: none;
     position: absolute;
-    border: black solid 1px;
+    border: var(--border-colour) solid 1px;
     border-radius: 4px;
     box-shadow: 4px 4px 4px rgb(0 0 0 / 30%);
-    background-color: #20242c;
+    background-color: var(--docker-secondary);
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
     width: fit-content;
     height: fit-content;
     max-width: 90%;
-    color: white;
+    color: var(--font-colour);
 }
 
 #popup h3[name="title"] {
     overflow-x: auto;
     overflow-y: hidden;
-}
-
-#popup input[type="button"] {
-    color: white;
-    background: rgb(8, 72, 155);
-    border: rgba(8, 72, 155, 0.7) solid 1px;
-    border-radius: 4px;
-}
-
-#popup input[type="button"][role="cancel"] {
-    background:rgb(155, 8, 8);
-    border: rgba(155, 8, 8, 0.7) solid 1px;
 }
 
 #popup input[type="button"][role="submit"] { display: none; }
@@ -56,7 +106,7 @@ body[data-popup="true"]>#popup {
     overflow-y: auto;
 }
 #popup div[name="elems"], #popup div[name="elems"] * {
-    color: white;
+    color: var(--font-colour);
     font-size: small;
 }
 
@@ -64,18 +114,23 @@ body[data-popup="true"]>#popup {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    border: 1px solid black;
-    min-width: 18em;
-    max-width: 18em;
-    min-height: 10em;
-    max-height: 10em;
+    border: var(--border-colour) solid 1px;
+    min-width: var(--docker-card-min-width);
+    max-width: var(--docker-card-max-width);
+    min-height: var(--docker-card-min-height);
+    max-height: var(--docker-card-max-height);
     box-shadow: 0 4px 4px rgb(0 0 0 / 30%);
     overflow: hidden;
     border-radius: 2%;
     /* margin: .25em; */
-    color: white;
-    background-color: #20242c;
+    color: var(--font-colour);
+    background-color: var(--docker-secondary);
     position: relative;
+}
+
+.docker-card-gripper {
+    background: var(--docker-card-gripper);
+    width: 100%;
 }
 
 .docker-card-overlay {
@@ -113,18 +168,22 @@ body[data-popup="true"]>#popup {
 }
 
 .docker-card>.docker-card-header {
-    background-color: #08489B;
+    background-color: var(--docker-primary);
     padding: 4px;
     margin: 0;
     height: 3em;
     margin-bottom: 2px;
     position: relative;
-    text-shadow: 2px 2px 2px rgb(0 0 0 / 70%);
+    text-shadow: 2px 2px 2px var(--text-shadow-colour);
     -webkit-font-smoothing: antialiased;
 }
 
+.docker-card>.docker-card-header * {
+    --font-colour: white;
+}
+
 .docker-card>.docker-card-header>h1,.docker-card>.docker-card-header>h2,.docker-card>.docker-card-header>h3,.docker-card>.docker-card-header>h4,.docker-card>.docker-card-header>h5 {
-    color: white;
+    color: var(--font-colour);
     font-family: "roboto-light", "Segoe UI Light", "Segoe UI", Calibri, Verdana, Geneva, "DejaVu Sans", sans-serif !important;
     font-weight: lighter !important;
     font-size: inherit !important;
@@ -242,12 +301,12 @@ body[data-popup="true"]>#popup {
     padding-bottom: .5em !important;
     
     width: 100%;
-    color: white;
-    text-shadow: 2px 2px 2px rgb(0 0 0 / 70%);
+    color: var(--font-colour);
+    text-shadow: 2px 2px 2px var(--text-shadow-colour);
     padding: 2px;
     box-sizing: border-box;
-    background-color: #1C262D;
-    border: 1px solid rgba(0, 0, 0, 0.3);
+    background-color: var(--docker-tertiary);
+    border: 1px solid rgba(var(--border-colour), 0.3);
 }
 
 .docker-card>.docker-card-status>.data {
@@ -262,4 +321,36 @@ body[data-popup="true"]>#popup {
     font-size: 12px;
     min-width: 9.4em;
     max-width: 9.4em;
+}
+
+body.theme-transition #colour-mode {
+    animation-name: spin;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+    animation-timing-function: ease;
+}
+
+#colour-mode::after {
+    cursor: pointer;
+    color: var(--font-colour);
+}
+
+body.light #colour-mode::after {
+    content: 'light_mode';
+}
+
+body.dark #colour-mode::after {
+    content: 'dark_mode';
+}
+
+#image_cards>[snappable], #container_cards>[snappable] {
+    flex: 1;
+    border: var(--border-colour) dashed 1px !important;
+}
+
+[draggableArea] {
+    background: var(--background-colour);
+    border-radius: 4px;
+    min-height: calc(var(--docker-card-max-height) + 1em);
+    min-width: calc(var(--docker-card-max-width) + 1em);
 }

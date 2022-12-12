@@ -9,9 +9,9 @@
         <link rel="stylesheet" href="/3rdparty/draggable/css/draggable.css">
         <link rel="stylesheet" href="/css/management.css">
     </head>
-    <body>
+    <body class="light">
         <div id="dom-wrapper">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+            <nav class="navbar navbar-expand-lg bg border-bottom">
                 <a class="navbar-brand" href="#">Dockerl</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -23,12 +23,14 @@
                             <a class="nav-link" href="#">Management</a>
                         </li>
                     </ul>
+                    <span id="colour-mode" class="material-symbols-outlined r-0" type="checkbox" onclick="document.body.toggleTheme()">
+                    </span>
                 </div>
             </nav>
 
-            <div class="container-fluid">
+            <div class="container-fluid bg">
                 <div class="row">
-                    <nav class="navbar navbar-light bg-light flex-column border-right" style="height: 100vh;">
+                    <nav class="navbar bg flex-column border-right" style="height: 100vh;">
                         <ul class="navbar-nav mr-auto nav">
                             <li class="nav-item">
                                 <a class="nav-link active" data-toggle="tab" href="#image_panel">Images</a>
@@ -43,13 +45,17 @@
                             <div class="m-1">
                                 <input type="button" class="btn btn-sm btn-primary" value="Pull Image">
                             </div>
-                            <div id="image_cards" class="m-1 d-flex flex-row"></div>
+                            <div id="image_cards" class="p-1 m-1 d-flex flex-row" draggableArea>
+                                <div snappable></div>
+                            </div>
                         </div>
                         <div id="container_panel" role="tabpanel" class="tab-pane fade p-1">
                             <div class="m-1">
                                 <input type="button" class="btn btn-sm btn-primary" value="Start Container">
                             </div>
-                            <div id="container_cards" class="m-1 d-flex flex-row"></div>
+                            <div id="container_cards" class="p-1 m-1 d-flex flex-row" draggableArea>
+                                <div snappable></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -135,7 +141,7 @@
                                         }
                                     });
                                     card.addEventListener("remove", event => console.log("Attempting to remove %O", card));
-                                    document.getElementById("image_cards").appendChild(card);
+                                    document.getElementById("image_cards").children[0].appendChild(card);
                                 } else {
                                     card.setTitle(opt.title);
                                     card.setSubtitle(opt.subtitle);
@@ -191,7 +197,7 @@
                                     card.id = opt.id;
                                     card.addEventListener("refresh", event => console.log("Attempting to refresh %O", card))
                                     card.addEventListener("remove", event => console.log("Attempting to remove %O", card))
-                                    document.getElementById("container_cards").appendChild(card);
+                                    document.getElementById("container_cards").children[0].appendChild(card);
                                 } else {
                                     card.setTitle(opt.title);
                                     card.setSubtitle(opt.subtitle);
@@ -218,9 +224,9 @@
                 <div class="row">
                     <div class="col-md-12 pr-0">
                         <span class="float-right pb-1">
-                            <input type="button" role="submit" value="Submit">
-                            <input type="button" role="ok" value="Ok">
-                            <input type="button" role="cancel" value="Cancel">
+                            <input class="btn btn-primary" type="button" role="submit" value="Submit">
+                            <input class="btn btn-primary" type="button" role="ok" value="Ok">
+                            <input class="btn btn-danger" type="button" role="cancel" value="Cancel">
                         </span>
                     </div>
                 </div>

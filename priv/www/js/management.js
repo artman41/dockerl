@@ -24,9 +24,10 @@
             if(!opts.title || !opts.subtitle || !(opts.data && opts.data instanceof Array && opts.data.length > 0))
                 throw {message: "Missing options!", args: [opts]}
 
-            let dockerCard = htmlToElement(`<div class="docker-card">
-                <div class="docker-card-overlay"></div>
-                <div class="docker-card-header">
+            let dockerCard = htmlToElement(`<div class="docker-card" draggable>
+                <div class="docker-card-gripper pb-2"></div>
+                <div class="docker-card-overlay" notGrabbable></div>
+                <div class="docker-card-header" notGrabbable>
                     <span class="container-icons">
                         <span class="container-refresh material-symbols-outlined">refresh</span>
                         <span class="container-remove material-symbols-outlined">close</span>
@@ -34,12 +35,12 @@
                     <h4 name="title"></h4>
                     <h5 name="subtitle"></h5>
                 </div>
-                <div class="docker-card-info">
+                <div class="docker-card-info" notGrabbable>
                     <table>
                         <tbody></tbody>
                     </table>
                 </div>
-                <div class="docker-card-status">
+                <div class="docker-card-status" notGrabbable>
                     <span>Status: </span>
                     <span class="data"></span>
                     <select>
@@ -373,4 +374,41 @@ function replaceArrow(arrow) {
         const arrow = arrows[i];
         replaceArrow(arrow);
     }
-})()
+})();
+
+(function() {
+    let transitionTimer = undefined;
+    function humanToMillis(str) {
+        return str.match(/\d+\s?\w/g)
+            .reduce((acc, cur, i) => {
+                let multiplier = 1000;
+                switch (cur.slice(-1)) {
+                    case 'h':
+                        multiplier *= 60;
+                    case 'm':
+                        multiplier *= 60;
+                    case 's':
+                        return ((parseInt(cur)?parseInt(cur):0) * multiplier) + acc;
+                }
+                return acc;
+            }, 0);
+    }
+    function toggleTheme() {
+        const classList = document.body.classList;
+        if(transitionTimer !== undefined) {
+            clearTimeout(transitionTimer);
+            classList.remove("theme-transition");
+            transitionTimer = undefined;
+            setTimeout(this.toggleTheme, 1);
+            return;
+        }
+        classList.add("theme-transition");
+        let time = window.getComputedStyle(document.body).getPropertyValue("--theme-transition-time");
+        transitionTimer = setTimeout(() => classList.remove("theme-transition"), humanToMillis(time));
+        if(classList.contains("light"))
+            classList.replace("light", "dark");
+        else
+            classList.replace("dark", "light");
+    }
+    document.body.toggleTheme = toggleTheme.bind(document.body);
+})();

@@ -10,6 +10,7 @@
     const ATTR_IsDragging = "draggable-isDragging";
     const ATTR_DraggableArea = "draggableArea";
     const ATTR_Draggable = "draggable";
+    const ATTR_NotGrabbable = "notGrabbable";
     const ATTR_Snappable = "snappable";
     const ATTR_IsSnapped = "snappable-isSnapped";
 
@@ -19,7 +20,7 @@
         if(!DEBUG)
             return;
         let x = params;
-        Object.entries(x).forEach(([key, value]) => x[key] = value.constructor === Object ? value : JSON.parse(JSON.stringify(value)))
+        Object.entries(x).forEach(([key, value]) => x[key] = value !== null && value !== undefined && value.constructor === Object ? value : JSON.parse(JSON.stringify(value === undefined ? null : value)))
         console.table(x, properties);
     }
 
@@ -99,7 +100,13 @@
             function onPointerDown(event) {
                 if(event.which !== WHICH_LEFT)
                     return;
-                const draggable = toDraggable(event.target);
+                let target = event.target;
+                while(target.getAttribute(ATTR_Draggable) === null){
+                    if(target.tagName === "INPUT" || target.tagName === "SELECT" || target.getAttribute(ATTR_NotGrabbable) !== null)
+                        return;
+                    target = target.parentElement;
+                }
+                const draggable = toDraggable(target);
                 const draggableArea = draggable.parentElement;
                 let computedStyleMap = window.getComputedStyle(draggable);
                 let {left: left, top: top, width: width, height: height} = draggable.getBoundingClientRect();
@@ -145,18 +152,24 @@
                     spacer.parentElement.removeChild(spacer);
                 }, {once: true});
 
-                this.dispatchEvent(new CustomEvent(EVENT_OnDraggablePickup, {bubbles: true, detail: {x: posX, y: posY} }));
+                draggable.dispatchEvent(new CustomEvent(EVENT_OnDraggablePickup, {bubbles: true, detail: {x: posX, y: posY} }));
                 if(DEBUG)
                     console.log("[%O] <%O> Event: %O, %O", event.type, event.target, event, [left, top]);
             }
             function onPointerUp(event) {
                 if(event.which !== WHICH_LEFT)
                     return;
-                const draggable = toDraggable(event.target);
+                let target = event.target;
+                while(target.getAttribute(ATTR_Draggable) === null){
+                    if(target.tagName === "INPUT" || target.tagName === "SELECT" || target.getAttribute(ATTR_NotGrabbable) !== null)
+                        return;
+                    target = target.parentElement;
+                }
+                const draggable = toDraggable(target);
                 draggable.setIsDragging(false);
                 isDraggingSomething = false;
                 dragTarget = undefined;
-                this.dispatchEvent(new CustomEvent(EVENT_OnDraggableDrop, {bubbles: true, detail: {x: posX, y: posY} }));
+                draggable.dispatchEvent(new CustomEvent(EVENT_OnDraggableDrop, {bubbles: true, detail: {x: posX, y: posY} }));
                 if(DEBUG)
                     console.log("[%O] <%O> Event: %O", event.type, event.target, event);
             }
@@ -171,7 +184,7 @@
                 }
                 const draggable = dragTarget;
                 draggable.setPosition(event.clientX, event.clientY);
-                this.dispatchEvent(new CustomEvent(EVENT_OnDraggableMove, {bubbles: true, detail: {x: posX, y: posY} }));
+                draggable.dispatchEvent(new CustomEvent(EVENT_OnDraggableMove, {bubbles: true, detail: {x: posX, y: posY} }));
                 if(DEBUG)
                     console.log("[%O] <%O> Event: %O", event.type, event.target, event);
             }
@@ -185,7 +198,7 @@
                     console.log("[%O] <%O> Event: %O", event.type, event.target, event);
             }
 
-            let draggableElems = document.querySelectorAll(`[${ATTR_DraggableArea}]>[${ATTR_Draggable}]`);
+            let draggableElems = document.querySelectorAll(`[${ATTR_DraggableArea}] [${ATTR_Draggable}]`);
             draggableElems.forEach(o => {
                 o.addEventListener("pointerdown", onPointerDown, {capture: true});
                 o.addEventListener("pointerup", onPointerUp, {capture: true});
@@ -284,6 +297,8 @@
             for(let i=0; i<children.length; i++) {
                 const child = children[i];
                 if(child.tagName === ELEM_DraggableSpacer)
+                    continue;
+                if(child === snapholder)
                     continue;
                 const childRect = getRect(child);
                 logTable({elem_text: elem.innerText, elem: elemRect, child_text: child.innerText, child: childRect});
