@@ -1,8 +1,66 @@
-#card_container {
-    flex-wrap: wrap;
+body[data-popup="true"]>#dom-wrapper {
+    -webkit-filter: blur(5px);
+    -moz-filter: blur(5px);
+    -o-filter: blur(5px);
+    -ms-filter: blur(5px);
+    filter: blur(5px);
 }
 
-.docker-card{
+body[data-popup="true"]>#popup {
+    display: block
+}
+
+#popup{
+    display: none;
+    position: absolute;
+    border: black solid 1px;
+    border-radius: 4px;
+    box-shadow: 4px 4px 4px rgb(0 0 0 / 30%);
+    background-color: #20242c;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: fit-content;
+    height: fit-content;
+    max-width: 90%;
+    color: white;
+}
+
+#popup h3[name="title"] {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+#popup input[type="button"] {
+    color: white;
+    background: rgb(8, 72, 155);
+    border: rgba(8, 72, 155, 0.7) solid 1px;
+    border-radius: 4px;
+}
+
+#popup input[type="button"][role="cancel"] {
+    background:rgb(155, 8, 8);
+    border: rgba(155, 8, 8, 0.7) solid 1px;
+}
+
+#popup input[type="button"][role="submit"] { display: none; }
+#popup input[type="button"][role="ok"] { display: none; }
+#popup input[type="button"][role="cancel"] { display: none; }
+
+#popup[isForm="true"] input[type="button"][role="submit"] { display: inline-block; }
+#popup[isForm="true"] input[type="button"][role="cancel"] { display: inline-block; }
+#popup[isForm="false"] input[type="button"][role="ok"] { display: inline-block; }
+
+#popup div[name="elems"] {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+#popup div[name="elems"], #popup div[name="elems"] * {
+    color: white;
+    font-size: small;
+}
+
+.docker-card {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -14,11 +72,48 @@
     box-shadow: 0 4px 4px rgb(0 0 0 / 30%);
     overflow: hidden;
     border-radius: 2%;
-    margin: .25em;
+    /* margin: .25em; */
+    color: white;
+    background-color: #20242c;
+    position: relative;
+}
+
+.docker-card-overlay {
+    display: none;
+}
+
+.docker-card[removing="true"]>.docker-card-overlay {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            rgba(255, 0, 0, 0),
+            rgba(255, 0, 0, 0.5) 3px,
+            rgba(255, 0, 0, 0) 6px
+        );
+    animation-name: slide_lr;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear; 
+}
+
+@keyframes slide_lr {
+    from {
+        background-position-x: left;
+    }
+    to {
+        background-position-x: center;
+    }
 }
 
 .docker-card>.docker-card-header {
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: #08489B;
     padding: 4px;
     margin: 0;
     height: 3em;
@@ -39,18 +134,55 @@
 
 .docker-card>.docker-card-header>h5 {
     font-size: 0.83em !important;
-}
+} 
+.docker-card>.docker-card-header>.container-icons {
+    float: right;
+    font-weight: 700;
+    line-height: 1;
+    opacity: .5;
 
-.docker-card>.docker-card-header>.close {
     position: relative;
-    top: -2em;
     padding: 0.1em;
     cursor: pointer;
 }
-.docker-card>.docker-card-header>.close::after {
-    content: "⟳";
+
+.docker-card>.docker-card-header>.container-icons>.container-remove {
+    font-size: 1rem;
+    color: rgba(255, 0, 0, 1);
+    text-shadow: 0 1px 0 rgba(255, 0, 0, .8);
+}
+.docker-card>.docker-card-header>.container-icons>.container-remove:hover {
+    color: rgba(255, 0, 0, 0.3);
+}
+.docker-card[removing="true"]>.docker-card-header>.container-icons>.container-remove {
     font-weight: bold;
-    font-size: 18px;
+}
+
+.docker-card>.docker-card-header>.container-icons>.container-refresh {
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 0 #fff;
+}
+.docker-card>.docker-card-header>.container-icons>.container-refresh:hover {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.docker-card[refreshing="true"]>.docker-card-header>.container-icons>.container-refresh {
+    animation-name: spin;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear; 
+    transform-origin: 50% 58%;
+    font-weight: bold;
+}
+
+@keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
 }
 
 .docker-card>.docker-card-info {
@@ -114,12 +246,12 @@
     text-shadow: 2px 2px 2px rgb(0 0 0 / 70%);
     padding: 2px;
     box-sizing: border-box;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: #1C262D;
     border: 1px solid rgba(0, 0, 0, 0.3);
 }
 
 .docker-card>.docker-card-status>.data {
-    min-width: 7.5em;
+    min-width: 7em;
     display: inline-block;
 }
 
@@ -128,4 +260,6 @@
     right: 0px;
     top: 1%;
     font-size: 12px;
+    min-width: 9.4em;
+    max-width: 9.4em;
 }

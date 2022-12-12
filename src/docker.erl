@@ -3,6 +3,8 @@
 -export([
     get_containers/0,
     get_images/0,
+    get_image/1,
+    remove_image/1, remove_image/2,
     create_container/1
 ]).
 
@@ -48,6 +50,18 @@ get_containers() ->
 -spec get_images() -> {ok, {StatusLine :: tuple(), Headers :: list(), DecodedJSON :: any()}} | {error, Reason :: any()}.
 get_images() ->
     json_request(get, "/images/json", []).
+
+-spec get_image(NameOrId :: iolist()) -> {ok, {StatusLine :: tuple(), Headers :: list(), DecodedJSON :: any()}} | {error, Reason :: any()}.
+get_image(NameOrId) ->
+    json_request(get, lists:flatten(io_lib:format("/images/~s/json", [NameOrId])), []).
+
+remove_image(NameOrId) ->
+    remove_image(NameOrId, []).
+
+-spec remove_image(NameOrId :: iolist(), list(force | noprune)) -> {ok, {StatusLine :: tuple(), Headers :: list(), DecodedJSON :: any()}} | {error, Reason :: any()}.
+remove_image(NameOrId, Opts) ->
+    QPs = string:join([case Opt of force -> "force=true"; noprune -> "noprune=true"; _ -> "" end || Opt <- Opts], "&"),
+    json_request(delete, lists:flatten(io_lib:format("/images/~s?~s", [NameOrId, QPs])), []).
 
 -spec create_container(list({optname(), iolist()})) -> {ok, {StatusLine :: tuple(), Headers :: list(), DecodedJSON :: any()}} | {error, Reason :: any()}.
 create_container(Opts) ->

@@ -5,85 +5,226 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <title>Management</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
         <link rel="stylesheet" href="/3rdparty/draggable/css/draggable.css">
         <link rel="stylesheet" href="/css/management.css">
     </head>
     <body>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="#">Dockerl</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-              <span class="navbar-toggler-icon"></span>
-            </button>
-          
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="#">Management</a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-        <div id="card_container" class="d-flex flex-row">
+        <div id="dom-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <a class="navbar-brand" href="#">Dockerl</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+                </button>
             
-        </div>
-        <span>
-            <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-            <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-            <script src="/3rdparty/draggable/js/draggable.js"></script>
-            <script src="/js/management.js"></script>
-            <script>
-                (async function() {
-                    async function getOpts() {
-                        let fetched = await fetch("/api/socket/direct/images/json");
-                        if(!fetched.ok)
-                            return;
-                        let json = await fetched.text();
-                        let objects = JSON.parse(json);
-                        function defaultAction(option) {
-                            console.log("%O was chosen!", option);
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="#">Management</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="container-fluid">
+                <div class="row">
+                    <nav class="navbar navbar-light bg-light flex-column border-right" style="height: 100vh;">
+                        <ul class="navbar-nav mr-auto nav">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#image_panel">Images</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#container_panel">Containers</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <div class="tab-content">
+                        <div id="image_panel" role="tabpanel" class="tab-pane fade show active p-1">
+                            <div class="m-1">
+                                <input type="button" class="btn btn-sm btn-primary" value="Pull Image">
+                            </div>
+                            <div id="image_cards" class="m-1 d-flex flex-row"></div>
+                        </div>
+                        <div id="container_panel" role="tabpanel" class="tab-pane fade p-1">
+                            <div class="m-1">
+                                <input type="button" class="btn btn-sm btn-primary" value="Start Container">
+                            </div>
+                            <div id="container_cards" class="m-1 d-flex flex-row"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <span>
+                <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+                <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+                <script src="/3rdparty/draggable/js/draggable.js"></script>
+                <script src="/js/management.js"></script>
+                <script>
+                    (async function() {
+                        async function getOpts() {
+                            let fetched = await fetch("/api/socket/direct/images/json");
+                            if(!fetched.ok)
+                                return;
+                            let json = await fetched.text();
+                            let objects = JSON.parse(json);
+                            return objects.map(obj => mapOpt(obj));
                         }
-                        return objects.map(obj => {
-                            let id = obj["Id"].split(":")[1].slice(0, 8);
+
+                        function mapOpt(obj) {
+                            function defaultAction(option) {
+                                console.log("%O was chosen!", option);
+                            }
+                            async function inspect(imageId) {
+                                let resp = await fetch("/api/image/" + imageId);
+                                if(!resp.ok)
+                                    throw "failed to inspect image " + imageId;
+                                let obj = JSON.parse(await resp.text());
+                                let pre = document.createElement("pre");
+                                pre.innerText = JSON.stringify(obj, null, 4);
+                                popup.show("Image " + imageId.slice(0, 8), false, pre);
+                            }
+                            let imageId = obj["Id"].split(":")[1];
+                            let id = imageId.slice(0, 8);
                             return {
-                                id: id,
+                                id: "image" + id,
                                 title: obj["RepoTags"][0],
                                 subtitle: id,
+                                imageId: imageId,
                                 data: [
                                     {name: "Created", value: new Date(obj["Created"]*1000).toISOString()},
-                                    {name: "Containers", value: obj["Containers"]},
                                     {name: "Size", value: obj["Size"]},
                                     {name: "RepoTags", value: obj["RepoTags"]},
                                     {name: "RepoDigests", value: obj["RepoDigests"]}
                                 ],
                                 actions: [
-                                    {value: "inspect", func: defaultAction},
+                                    {value: "inspect", func: () => inspect(imageId)},
                                     {value: "create container", func: defaultAction}
                                 ]
                             }
-                        })
-                    }
-                    
-                    async function updateCards() {
-                        let opts = await getOpts();
-                        for(let i = 0; i < opts.length; i++) {
-                            const opt = opts[i];
-                            let card = document.getElementById(opt.id);
-                            if(card === null){
-                                card = dockerCard.create(opt);
-                                card.id = opt.id;
-                                document.getElementById("card_container").appendChild(card);
-                            } else {
-                                card.setTitle(opt.title);
-                                card.setSubtitle(opt.subtitle);
-                                card.setData(opt.data);
-                            }
                         }
-                    }
+                        
+                        async function refreshImages() {
+                            let opts = await getOpts();
+                            for(let i = 0; i < opts.length; i++) {
+                                const opt = opts[i];
+                                let card = document.getElementById(opt.id);
+                                if(card === null){
+                                    card = dockerCard.create(opt);
+                                    card.id = opt.id;
+                                    card.addEventListener("refresh", async (event) => {
+                                        const promise = event.detail.promise;
+                                        let url = "/api/image/" + opt.imageId;
+                                        let fetched = await fetch(url);
+                                        if(!fetched.ok) {
+                                            promise.reject(`Failed to GET ${url}`);
+                                            return;
+                                        }
+                                        let json = await fetched.text();
+                                        let obj = JSON.parse(json);
+                                        // For whatever reason, inspecting an image gives us ISO8601 time
+                                        //  rather than milliseconds since creation, so we have to massage
+                                        //  the data.
+                                        obj["Created"] = Math.floor(new Date(obj["Created"]).getTime()/1000);
+                                        let mappedOpt = mapOpt(obj);
+                                        promise.resolve();
+                                        if(promise.isResolved()) {
+                                            card.setTitle(mappedOpt.title);
+                                            card.setSubtitle(mappedOpt.subtitle);
+                                            card.updateData(mappedOpt.data);
+                                        }
+                                    });
+                                    card.addEventListener("remove", event => console.log("Attempting to remove %O", card));
+                                    document.getElementById("image_cards").appendChild(card);
+                                } else {
+                                    card.setTitle(opt.title);
+                                    card.setSubtitle(opt.subtitle);
+                                    card.updateData(opt.data);
+                                }
+                            }
+                        };
+                        refreshImages();
+                    })();
 
-                    updateCards();
-                })();
-            </script>
-        </span>
+                    (async function() {
+                        async function getOpts() {
+                            let fetched = await fetch("/api/socket/direct/containers/json");
+                            if(!fetched.ok)
+                                return;
+                            let json = await fetched.text();
+                            let objects = JSON.parse(json);
+                            function defaultAction(option) {
+                                console.log("%O was chosen!", option);
+                            }
+                            return objects.map(obj => {
+                                let id = obj["Id"].slice(0, 8);
+                                let imageId = obj["ImageID"].split(":")[1].slice(0, 8);
+                                return {
+                                    id: "container" + id,
+                                    title: id,
+                                    subtitle: obj["Names"].join(", "),
+                                    status: obj["State"],
+                                    data: [
+                                        {name: "Created", value: new Date(obj["Created"]*1000).toISOString()},
+                                        {name: "Image", value: obj["Image"]},
+                                        {name: "ImageId", value: imageId},
+                                        {name: "Command", value: obj["Command"]},
+                                        {name: "Names", value: obj["Names"].join(", ")},
+                                        {name: "Ports", value: obj["Ports"].map(o => `${o["PrivatePort"]}:${o["PublicPort"]}/${o["Type"]}`).join(", ")},
+                                        {name: "Mounts", value: obj["Mounts"].map(o => `${o["Source"]}:${o["Destination"]}${o["Mode"] !== "" ? ":" + o["Mode"] : ""},${o["Type"]}`).join(", ")},
+                                        {name: "Status", value: obj["Status"]}
+                                    ],
+                                    actions: [
+                                        {value: "shell", func: defaultAction}
+                                    ]
+                                }
+                            })
+                        }
+                        
+                        async function refreshContainers() {
+                            let opts = await getOpts();
+                            for(let i = 0; i < opts.length; i++) {
+                                const opt = opts[i];
+                                let card = document.getElementById(opt.id);
+                                if(card === null){
+                                    card = dockerCard.create(opt);
+                                    card.id = opt.id;
+                                    card.addEventListener("refresh", event => console.log("Attempting to refresh %O", card))
+                                    card.addEventListener("remove", event => console.log("Attempting to remove %O", card))
+                                    document.getElementById("container_cards").appendChild(card);
+                                } else {
+                                    card.setTitle(opt.title);
+                                    card.setSubtitle(opt.subtitle);
+                                    card.updateData(opt.data);
+                                }
+                            }
+                        };
+                        refreshContainers();
+                    })();
+                </script>
+            </span>
+        </div>
+        <div id="popup" class="container-fluid">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3 name="title">Popup Title</h3>
+                    </div>
+                </div>
+                <div class="row mb-1">
+                    <div name="elems" class="col-md-12">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 pr-0">
+                        <span class="float-right pb-1">
+                            <input type="button" role="submit" value="Submit">
+                            <input type="button" role="ok" value="Ok">
+                            <input type="button" role="cancel" value="Cancel">
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
 </html>

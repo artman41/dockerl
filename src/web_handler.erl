@@ -52,6 +52,42 @@ handle(Method, [<<"socket">>, <<"direct">> | Tail], Headers, Req0, Opts) ->
                 cowboy_req:reply(500, #{}, io_lib:format("Request failed with error ~p~n", [Err]), Req1)
         end,
     {ok, Req2, Opts};
+handle(<<"GET">>, [<<"images">>], _Headers, Req0, Opts) ->
+    Req1 = 
+        case docker:get_images() of
+            {ok, {{_, HTTPCode, _}, DockerHeaders, RespBody}} ->                
+                RespHeaders = maps:from_list([{list_to_binary(K), list_to_binary(V)} || {K,V} <- DockerHeaders]),
+                cowboy_req:reply(HTTPCode, RespHeaders, jsx:encode(RespBody), Req0);
+            Err = {error, _} ->
+                cowboy_req:reply(500, #{}, io_lib:format("Request failed with error ~p~n", [Err]), Req0)
+        end,
+    {ok, Req1, Opts};
+handle(<<"GET">>, [<<"image">>, IdOrName], _Headers, Req0, Opts) ->
+    Req1 = 
+        case docker:get_image(IdOrName) of
+            {ok, {{_, HTTPCode, _}, DockerHeaders, RespBody}} ->
+                RespHeaders = maps:from_list([{list_to_binary(K), list_to_binary(V)} || {K,V} <- DockerHeaders]),
+                cowboy_req:reply(HTTPCode, RespHeaders, jsx:encode(RespBody), Req0);
+            Err = {error, _} ->
+                cowboy_req:reply(500, #{}, io_lib:format("Request failed with error ~p~n", [Err]), Req0)
+        end,
+    {ok, Req1, Opts};
+handle(<<"POST">>, [<<"image">>, IdOrName, <<"remove">>], _Headers, Req0, Opts) ->
+    QueryParams = cowboy_req:parse_qs(Req0),
+    Opts = [QP || QP <- [force, noprune], 
+        case lists:keyfind(QP, 1, QueryParams) of 
+            false -> false; 
+            {QP, V} -> V =:= <<"true">> 
+        end],
+    Req1 = 
+        case docker:remove_image(IdOrName, Opts) of
+            {ok, {{_, HTTPCode, _}, DockerHeaders, RespBody}} ->
+                RespHeaders = maps:from_list([{list_to_binary(K), list_to_binary(V)} || {K,V} <- DockerHeaders]),
+                cowboy_req:reply(HTTPCode, RespHeaders, jsx:encode(RespBody), Req0);
+            Err = {error, _} ->
+                cowboy_req:reply(500, #{}, io_lib:format("Request failed with error ~p~n", [Err]), Req0)
+        end,
+    {ok, Req1, Opts};
 handle(Method, Path, Headers, Req0, Opts) ->
     lager:info("Method: ~p, Path: ~p, Headers: ~p~n", [Method, Path, Headers]),
     Req1 = cowboy_req:reply(404, Req0),
