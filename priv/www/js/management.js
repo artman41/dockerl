@@ -15,6 +15,26 @@
         let buttons = document.querySelectorAll("#popup input[type='button'][role]");
         for(let i=0; i<buttons.length; i++)
             buttons[i].addEventListener("click", event => popup.events.raise(buttons[i].getAttribute("role"), event));
+
+        ["light", "dark"].forEach(klass => {
+            let elem = htmlToElement(`<template class="${klass}"></template`);
+            document.body.appendChild(elem);
+            let style = window.getComputedStyle(elem);
+            let bgColour = style.getPropertyValue("--docker-secondary").trim();
+            monaco.editor.defineTheme(`custom-${klass}`, {
+                base: `vs${klass === "light" ? "" : "-" + klass}`,
+                inherit: true,
+                rules: [],
+                colors: {
+                    "editor.background": bgColour,
+                },
+            });
+            elem.remove();
+        });
+        if(document.body.classList.contains("dark"))
+            monaco.editor.setTheme("custom-dark");
+        else
+            monaco.editor.setTheme("custom-light");
     }
 
     window.dockerCard = (function() {
@@ -218,6 +238,48 @@
 
         obj.create = create.bind(obj);
 
+        obj.popup = {};
+        
+        async function inspect(imageId) {
+            let resp = await fetch("/api/image/" + imageId);
+            if(!resp.ok)
+                throw "failed to inspect image " + imageId;
+            let obj = JSON.parse(await resp.text());
+            let container = htmlToElement(`<div monaco-container></div>`);
+            let _editor = monaco.editor.create(container, {
+                value: JSON.stringify(obj, null, 4),
+                language: 'json',
+                automaticLayout: true,
+                scrollBeyondLastLine: false
+            });
+            popup.show("Image " + imageId.slice(0, 8), false, container);
+            container.parentElement.classList.add("ignore-theme");
+        }
+
+        obj.popup.inspect = inspect.bind(obj.popup);
+
+        function createContainer(imageId, imageName) {
+            const elem = htmlToElement(`<form>
+                <div class="mb-3">
+                    <label for="exampleInputEmail1" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputPassword1" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="exampleInputPassword1">
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                    <label class="form-check-label" for="exampleCheck1">Check me out</label>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>`);
+            popup.show(`Creating a container of ${imageName} (${imageId.slice(0, 8)})`, true, elem);
+        }
+
+        obj.popup.createContainer = createContainer.bind(obj.popup)
+
         return obj;
     })();
 
@@ -229,14 +291,18 @@
                 listeners: {},
             };
 
-            function addListener(type, listener) {
+            function addListener(type, listener, opts = {}) {
                 if(!(type !== undefined && type.toString().length > 0))
                     throw {message: "type is not a string!", args: [type, listener]};
                 if(!(listener instanceof Function))
                     throw {message: "Listener is not a function!", args: [type, listener]};
                 if(this.listeners[type] === undefined)
                     this.listeners[type] = [];
-                this.listeners[type].push(listener);
+                
+                this.listeners[type].push({
+                    func: listener,
+                    executions: opts["executions"] === undefined ? -1 : opts["executions"]
+                });
             }
 
             function removeListener(type, listener) {
@@ -246,7 +312,7 @@
                     throw {message: "Listener is not a function!", args: [type, listener]};
                 if(this.listeners[type] === undefined || this.listeners[type].length === 0)
                     return;
-                this.listeners[type] = this.listeners[type].filter(o => o !== listener);
+                this.listeners[type] = this.listeners[type].filter(o => o.func !== listener);
             }
 
             function raise(type, data) {
@@ -257,8 +323,18 @@
                 const listeners = this.listeners[type];
                 if(listeners === undefined || listeners.length === 0)
                     return;
-                for(let i=0; i<listeners.length; i++)
-                    listeners[i](data);
+                let removals = [];
+                for(let i=0; i<listeners.length; i++){
+                    listeners[i].func(data);
+                    if(listeners[i].executions -1 == 0)
+                        removals.push({type: type, listener: listeners[i]});
+                    else
+                    listeners[i].executions-=1
+                }
+                for(let i=0; i<removals.length; i++){
+                    let {type: type, listener: listener} = removals[i];
+                    removeListener(type, listener);
+                }
             }
 
             obj.addListener = addListener.bind(obj);
@@ -269,12 +345,20 @@
         })();
         obj.events = dispatcher;
 
+        let domElem = null;
+        function getElement() {
+            if(domElem !== null)
+                return domElem;
+            domElem = document.getElementById("popup");
+            return domElem;
+        }
+
         function showPopup(name, isForm, ...elems) {
             if(name === undefined || isForm === undefined || !(elems instanceof Array && elems.length > 0)) 
                 throw {message: "Bad args", args: [name, isForm, elems]};
             if(document.body.getAttribute("data-popup") === "true")
                 return;
-            const divPopup = document.getElementById("popup");
+            const divPopup = this.getElement();
             divPopup.setAttribute("isForm", isForm === true);
             const divTitle = divPopup.querySelector('[name="title"]');
             divTitle.innerText = name;
@@ -293,6 +377,7 @@
             this.events.raise("hide", {});
         }
 
+        obj.getElement = getElement.bind(obj);
         obj.show = showPopup.bind(obj);
         obj.hide = hidePopup.bind(obj);
 
@@ -396,9 +481,11 @@ function replaceArrow(arrow) {
     function replaceTheme(classList) {
         if(classList.contains("light")) {
             classList.replace("light", "dark");
+            monaco.editor.setTheme("custom-dark");
             return "dark";
         }
         classList.replace("dark", "light");
+        monaco.editor.setTheme("custom-light");
         return "light";
     }
     function toggleTheme() {

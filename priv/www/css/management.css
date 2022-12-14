@@ -9,7 +9,7 @@
     --docker-card-max-width: 18em;
     --docker-card-max-height: 10em;
 }
-body.dark * {
+body.dark,body.dark *,template.dark {
     --docker-primary: rgb(8, 72, 155);
     --docker-secondary: #20242c;
     --docker-tertiary: #1C262D;
@@ -25,8 +25,7 @@ body.dark * {
     --a-hover-colour: #438bd8;
     transition: background .2s ease-in, border-color .2s ease-in;
 }
-
-body.light * {
+body.light,body.light *,template.light {
     --docker-primary: #086DD7;
     --docker-secondary: white;
     --docker-tertiary: rgb(250, 250, 250);
@@ -42,13 +41,11 @@ body.light * {
     --a-hover-colour: #0056b3;
     transition: background .2s ease-in, border-color .2s ease-in;
 }
- 
+
 body[data-popup="true"]>#dom-wrapper {
-    -webkit-filter: blur(5px);
-    -moz-filter: blur(5px);
-    -o-filter: blur(5px);
-    -ms-filter: blur(5px);
     filter: blur(5px);
+    background: no-repeat center center fixed; 
+    background-size: cover;
 }
 
 .bg {
@@ -67,7 +64,7 @@ body[data-popup="true"]>#dom-wrapper {
     color: rgba(var(--nav-link-colour), 1) !important;
 }
 
-.border-left,.border-right,.border-top,.border-bottom {
+.border,.border-left,.border-right,.border-top,.border-bottom {
     border-color: var(--border-colour) !important;
 }
 
@@ -112,10 +109,16 @@ body[data-popup="true"]>#popup {
 #popup[isForm="false"] input[type="button"][role="ok"] { display: inline-block; }
 
 #popup div[name="elems"] {
-    max-height: 70vh;
+    --max-height: 70vh;
+    max-height: var(--max-height);
     overflow-y: auto;
 }
-#popup div[name="elems"], #popup div[name="elems"] * {
+
+#popup div[name="elems"]:has([monaco-container]) {
+    height: var(--max-height);
+}
+
+#popup div[name="elems"]:not(.ignore-theme), #popup div[name="elems"]:not(.ignore-theme) * {
     color: var(--font-colour);
     font-size: small;
 }
@@ -308,7 +311,7 @@ body[data-popup="true"]>#popup {
     padding: .1em !important;
     padding-top: 0px !important;
     padding-bottom: .5em !important;
-    
+
     width: 100%;
     color: var(--font-colour);
     text-shadow: 2px 2px 2px var(--text-shadow-colour);
@@ -362,4 +365,9 @@ body.dark #colour-mode::after {
     border-radius: 4px;
     min-height: calc(var(--docker-card-max-height) + 1em);
     min-width: calc(var(--docker-card-max-width) + 1em);
+}
+
+[monaco-container] {
+    height: 100%;
+    width: 100vh;
 }
