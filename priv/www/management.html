@@ -24,7 +24,7 @@
                             <a class="nav-link active" href="#">Management</a>
                         </li>
                     </ul>
-                    <span id="colour-mode" class="material-symbols-outlined r-0" type="checkbox" onclick="document.body.toggleTheme()"></span>
+                    <span id="colour-mode" class="material-symbols-outlined r-0" type="checkbox" onclick="if(document.body.getAttribute('data-popup') === 'true') return; document.body.toggleTheme();"></span>
                 </div>
             </nav>
 

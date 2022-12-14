@@ -343,8 +343,11 @@ body.theme-transition #colour-mode {
 }
 
 #colour-mode::after {
-    cursor: pointer;
     color: var(--font-colour);
+}
+
+body:not([data-popup="true"]) #colour-mode::after {
+    cursor: pointer;
 }
 
 body.light #colour-mode::after {

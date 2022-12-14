@@ -21,12 +21,19 @@
             document.body.appendChild(elem);
             let style = window.getComputedStyle(elem);
             let bgColour = style.getPropertyValue("--docker-secondary").trim();
+
+            function colourToHex(str){ 
+                let ctx = document.createElement('canvas').getContext('2d'); 
+                ctx.fillStyle = str; 
+                return ctx.fillStyle; 
+            }
+
             monaco.editor.defineTheme(`custom-${klass}`, {
                 base: `vs${klass === "light" ? "" : "-" + klass}`,
                 inherit: true,
                 rules: [],
                 colors: {
-                    "editor.background": bgColour,
+                    "editor.background": colourToHex(bgColour),
                 },
             });
             elem.remove();
@@ -246,12 +253,14 @@
                 throw "failed to inspect image " + imageId;
             let obj = JSON.parse(await resp.text());
             let container = htmlToElement(`<div monaco-container></div>`);
-            let _editor = monaco.editor.create(container, {
+            let opts = {
                 value: JSON.stringify(obj, null, 4),
-                language: 'json',
+                language: "json",
                 automaticLayout: true,
                 scrollBeyondLastLine: false
-            });
+            };
+            document.body.addEventListener("onThemeTransitionStart", _event => opts.theme = document.body.classList.contains("dark") ? "custom-dark" : "custom-light");
+            let _editor = monaco.editor.create(container, opts);
             popup.show("Image " + imageId.slice(0, 8), false, container);
             container.parentElement.classList.add("ignore-theme");
         }
@@ -497,9 +506,13 @@ function replaceArrow(arrow) {
             setTimeout(this.toggleTheme, 1);
             return;
         }
+        document.body.dispatchEvent(new CustomEvent("onThemeTransitionStart", {}));
         classList.add("theme-transition");
         let time = window.getComputedStyle(document.body).getPropertyValue("--theme-transition-time");
-        transitionTimer = setTimeout(() => classList.remove("theme-transition"), humanToMillis(time));
+        transitionTimer = setTimeout(() => {
+            classList.remove("theme-transition");
+            document.body.dispatchEvent(new CustomEvent("onThemeTransitionStop", {}));
+        }, humanToMillis(time));
         localStorage.setItem("wasDarkMode", replaceTheme(classList) === "dark")
     }
     document.body.toggleTheme = toggleTheme.bind(document.body);
