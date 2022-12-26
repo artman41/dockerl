@@ -1,23 +1,29 @@
-(function() {
+const DEBUG = false;
 
-    /**
-     * @param {String} HTML representing a single element
-     * @return {Element}
-     */
-    function htmlToElement(html) {
-        var template = document.createElement('template');
-        html = html.trim(); // Never return a text node of whitespace as the result
-        template.innerHTML = html;
-        return template.content.firstChild;
+import { Docker } from "./docker.js";
+import { ShellQuote } from './shell-quote.js';
+
+let shellQuote = new ShellQuote();
+
+if(DEBUG) {
+    function createScript(src) {
+        let script = document.createElement("script");
+        script.src = src;
+        return script;
     }
-    
+    document.currentScript.before(createScript("https://cdn.jsdelivr.net/bluebird/latest/bluebird.js"));
+
+    Promise.longStackTraces();
+}
+
+(function() {
     function onload(_event) {
-        let buttons = document.querySelectorAll("#popup input[type='button'][role]");
+        let buttons = document.querySelectorAll("#popup input[type][role].btn");
         for(let i=0; i<buttons.length; i++)
             buttons[i].addEventListener("click", event => popup.events.raise(buttons[i].getAttribute("role"), event));
 
         ["light", "dark"].forEach(klass => {
-            let elem = htmlToElement(`<template class="${klass}"></template`);
+            let elem = `<template class="${klass}"></template`.toDOMElement();
             document.body.appendChild(elem);
             let style = window.getComputedStyle(elem);
             let bgColour = style.getPropertyValue("--docker-secondary").trim();
@@ -44,6 +50,46 @@
             monaco.editor.setTheme("custom-light");
     }
 
+    window.toasts = (function() {
+        const severities = {
+            DEBUG: "debug",
+            INFO: "info",
+            WARN: "warn",
+            ERROR: "error"
+        };
+        let obj = {
+            severities: severities
+        };
+
+        function add(message, description, options) {
+            const toastContainer = document.getElementById("toasts");
+            options = options === undefined ? {} : options;
+            const defaults = {
+                severity: severities.INFO
+            }
+            options.getValue = (function(key) {
+                return this[key] === undefined ? defaults[key] : this[key];
+            }).bind(options);
+            let toast = `<div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-animation="true" data-autohide="false" data-severity="${options.getValue("severity")}">
+                <div class="toast-header">
+                    <!-- <img src="..." class="rounded mr-2" alt="..."> -->
+                    <strong class="mr-auto">${message}</strong>
+                    <!-- <small>11 mins ago</small> -->
+                    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="toast-body">${description instanceof HTMLElement ? description.outerHTML : description}</div>
+            </div>`.toDOMElement();
+            toastContainer.appendChild(toast);
+            $(toast).toast('show');
+        }
+
+        obj.add = add.bind(obj);
+
+        return obj;
+    })();
+
     window.dockerCard = (function() {
         let obj = {};
 
@@ -51,7 +97,7 @@
             if(!opts.title || !opts.subtitle || !(opts.data && opts.data instanceof Array && opts.data.length > 0))
                 throw {message: "Missing options!", args: [opts]}
 
-            let dockerCard = htmlToElement(`<div class="docker-card" draggable>
+            let dockerCard = `<div class="docker-card" draggable>
                 <div class="docker-card-gripper pb-2"></div>
                 <div class="docker-card-overlay" notGrabbable></div>
                 <div class="docker-card-header" notGrabbable>
@@ -74,7 +120,7 @@
                         <option value="" disabled selected hidden>Actions</option>
                     </select>
                 </div>
-            </div>`);
+            </div>`.toDOMElement();
 
             const title = dockerCard.querySelector(".docker-card-header>h4[name='title']");
             function setTitle(text) {
@@ -94,7 +140,7 @@
             function timedPromise(eventType, func_finally) {
                 let promise = new Promise((resolve, reject) => {
                     function eventf() {
-                        let timeoutFunc = (delay) => setTimeout(() => reject("timeout"), delay);
+                        let timeoutFunc = (delay) => setTimeout(() => reject(new Error("timeout")), delay);
                         const delay = 5000;
                         let _now = new Date().getTime();
                         let _triggerTime = _now + delay;
@@ -182,7 +228,7 @@
                 table.tBodies[0].remove();
                 let tbody = table.createTBody();
                 for(let i=0; i<data.length; i++) {
-                    let row = htmlToElement(templateDataRow);
+                    let row = templateDataRow.toDOMElement();
                     row.setAttribute("key", data[i].name);
                     row.querySelector("[name='key']").innerText = data[i].name;
                     row.querySelector("[name='value']").innerText = data[i].value;
@@ -204,7 +250,7 @@
                         row.querySelector("[name='value']").innerText = data[i].value;
                         continue;
                     }
-                    row = htmlToElement(templateDataRow);
+                    row = templateDataRow.toDOMElement();
                     row.querySelector("[name='key']").innerText = data[i].name;
                     row.querySelector("[name='value']").innerText = data[i].value;
                     if(tbody.rows.length <= 3)
@@ -229,7 +275,7 @@
                     let {value: v, func: f} = opts.actions[i];
                     if(!v || !f || !(f instanceof Function))
                         continue;
-                    let option = htmlToElement(`<option>${v}</option>`);
+                    let option = `<option>${v}</option>`.toDOMElement();
                     actions.addEventListener("change", event => {
                         const selected = event.target.selectedIndex;
                         if(selected !== i+1 && event.target.options[selected] !== option)
@@ -248,13 +294,15 @@
         obj.popup = {};
         
         async function inspect(imageId) {
-            let resp = await fetch("/api/image/" + imageId);
-            if(!resp.ok)
-                throw "failed to inspect image " + imageId;
-            let obj = JSON.parse(await resp.text());
-            let container = htmlToElement(`<div monaco-container></div>`);
+            let resp = await docker.getImage(imageId);
+            let jsonString = JSON.stringify(resp.data, null, 4);
+            if(!resp.ok){
+                toasts.add(`${imageId.slice(0, 8)}: ${resp.statusText}`, `<pre>${jsonString}</pre>`.toDOMElement(), {severity: toasts.severities.ERROR});
+                return;
+            }
+            let container = `<div monaco-container></div>`.toDOMElement();
             let opts = {
-                value: JSON.stringify(obj, null, 4),
+                value: jsonString,
                 language: "json",
                 automaticLayout: true,
                 scrollBeyondLastLine: false
@@ -263,31 +311,98 @@
             let _editor = monaco.editor.create(container, opts);
             popup.show("Image " + imageId.slice(0, 8), false, container);
             container.parentElement.classList.add("ignore-theme");
+            popup.events.addListener("ok", () => popup.hide(), {executions: 1});
         }
 
         obj.popup.inspect = inspect.bind(obj.popup);
 
-        function createContainer(imageId, imageName) {
-            const elem = htmlToElement(`<form>
+        function containerPrompt(header) {
+            let portCode = 
+                "if(this.value < this.min) this.value = this.min;" +
+                "if(this.value > this.max) this.value = this.max;";
+            let row = `<div class="row ml-0 mr-0" style="align-content: center;">
+                <input placeholder="" name="port-from" type="number" min="1025" max="65536" class="form-control col-3" onchange="${portCode}">
+                <span style="margin-top: -0.2em;">
+                    <span class="material-symbols-outlined d-block position-relative">arrow_right_alt</span>
+                    <span class="material-symbols-outlined d-block position-relative">arrow_right_alt</span>
+                    <span class="material-symbols-outlined d-block position-relative">arrow_right_alt</span>
+                </span>
+                <input placeholder="" name="port-to" type="number" min="1025" max="65536" class="form-control col-3" onchange="${portCode}">
+                <select>
+                    <option>tcp</option>
+                    <option>udp</option>
+                    <option>sctp</option>
+                </select>
+            </div>`;
+            const elem = `<form class="was-validated">
                 <div class="mb-3">
-                    <label for="exampleInputEmail1" class="form-label">Email address</label>
-                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                    <label class="form-label">Container Name</label>
+                    <input name="container-name" type="text" class="form-control" required>
                 </div>
                 <div class="mb-3">
-                    <label for="exampleInputPassword1" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="exampleInputPassword1">
+                    <label class="form-label">Ports <span name="add_input" class="material-symbols-outlined align-text-bottom font-weight-bold">Add</span></label>
+                    <!-- ${row} -->
                 </div>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="exampleCheck1">
-                    <label class="form-check-label" for="exampleCheck1">Check me out</label>
+                <div class="mb-3">
+                    <label class="form-label">Command</label>
+                    <input name="container-command" type="text" class="form-control" value="/bin/echo 'Hello World!'">
                 </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </form>`);
-            popup.show(`Creating a container of ${imageName} (${imageId.slice(0, 8)})`, true, elem);
+            </form>`.toDOMElement();
+
+            function toData() {
+                let entries = new FormData(this).entries();
+                let obj = {
+                    containerName: null,
+                    ports: null,
+                    command: null
+                }
+                while(true) {
+                    let next = entries.next();
+                    if(next.done)
+                        break;
+                    let [key, value] = next.value;
+                    switch (key) {
+                        case "container-name":
+                            obj.containerName = value.replace(/\s/g, "_");
+                            break;
+                        case "port-from":
+                            if(obj.ports === null)
+                                obj.ports = [];
+                            obj.ports.push({from: value});
+                            break;
+                        case "port-to":
+                            if(obj.ports === null || obj.ports.length === 0)
+                                continue;
+                            obj.ports[obj.ports.length-1].to = value;
+                            break;
+                        case "container-command":
+                            obj.command = shellQuote.parse(value);
+                            break;
+                    }
+                };
+                return obj;
+            }
+            elem.toData = toData.bind(elem);
+
+            const addInput = elem.querySelector("span[name='add_input']");
+            addInput.addEventListener("click", event => {
+                let elem = row.toDOMElement();
+                let inputs = elem.querySelectorAll('input');
+                inputs.forEach(input => input.addEventListener("focusout", _ => {
+                    setTimeout(() => {
+                        if(inputs.all(input => input.value === "") && document.activeElement.parentElement !== elem) 
+                            elem.remove(); 
+                    }, 1);
+                }));
+                event.target.parentElement.parentElement.appendChild(elem);
+                inputs[0].focus();
+            });
+            popup.show(header, true, elem);
+
+            return elem;
         }
 
-        obj.popup.createContainer = createContainer.bind(obj.popup)
+        obj.popup.containerPrompt = containerPrompt.bind(obj.popup)
 
         return obj;
     })();
@@ -307,11 +422,26 @@
                     throw {message: "Listener is not a function!", args: [type, listener]};
                 if(this.listeners[type] === undefined)
                     this.listeners[type] = [];
+
+                let obj = {
+                    executions: opts["executions"] === undefined ? -1 : opts["executions"],
+                    ignoreExecution: false
+                };
+
+                let functions = {
+                    ignoreExecution: function() {
+                        obj.ignoreExecution = true;
+                    },
+                    setExecutions: function(number) {
+                        if (number !== undefined && typeof(number) != "number" && number < 1)
+                            return false;
+                        obj.executions = number === undefined ? -1 : number;
+                    }
+                }
                 
-                this.listeners[type].push({
-                    func: listener,
-                    executions: opts["executions"] === undefined ? -1 : opts["executions"]
-                });
+                obj.func = listener.bind(functions);
+                
+                this.listeners[type].push(obj);
             }
 
             function removeListener(type, listener) {
@@ -324,7 +454,7 @@
                 this.listeners[type] = this.listeners[type].filter(o => o.func !== listener);
             }
 
-            function raise(type, data) {
+            async function raise(type, data) {
                 if(!(type !== undefined && type.toString().length > 0))
                     throw {message: "type is not a string!", args: [type, data]};
                 if(!(data instanceof Object))
@@ -333,16 +463,43 @@
                 if(listeners === undefined || listeners.length === 0)
                     return;
                 let removals = [];
+                let after = {resolve: undefined, reject: undefined};
+                data.$after = new Promise((resolve, reject) => after = {resolve: resolve, reject: reject});
+                data.$after.catch(_ => {});
+                
+                let promises = [];
+                let success = true;
                 for(let i=0; i<listeners.length; i++){
-                    listeners[i].func(data);
-                    if(listeners[i].executions -1 == 0)
-                        removals.push({type: type, listener: listeners[i]});
+                    let ret = undefined;
+                    try {
+                        ret = listeners[i].func(data);
+                    } catch(ex) {
+                        ret = false;
+                    }
+                    if(ret instanceof Promise)
+                        promises.push(ret);
+                    else if(success && !ret)
+                        success = false;
+                    if(!listeners[i].ignoreExecution)
+                        if(listeners[i].executions -1 == 0)
+                            removals.push({type: type, listener: listeners[i]});
+                        else if(listeners[i].executions > 0)
+                            listeners[i].executions-=1
                     else
-                    listeners[i].executions-=1
+                        listeners[i].ignoreExecution = false;
                 }
+                for(let i=0; i<promises.length && success; i++) {
+                    let ret = await promises[i];
+                    if(!ret)
+                        success = false;
+                }
+                if(success)
+                    after.resolve();
+                else
+                    after.reject(new Error("1 or more EventHandlers returned false"));
                 for(let i=0; i<removals.length; i++){
                     let {type: type, listener: listener} = removals[i];
-                    removeListener(type, listener);
+                    this.removeListener(type, listener.func);
                 }
             }
 
@@ -390,9 +547,10 @@
         obj.show = showPopup.bind(obj);
         obj.hide = hidePopup.bind(obj);
 
-        obj.events.addListener("submit", () => obj.hide());
+        let hideFunc = event => {event.$after.then(() => obj.hide(), () => {});};
+        obj.events.addListener("submit", hideFunc);
         obj.events.addListener("cancel", () => obj.hide());
-        obj.events.addListener("ok", () => obj.hide());
+        obj.events.addListener("ok", hideFunc);
 
         return obj;
     })();

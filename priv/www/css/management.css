@@ -2,6 +2,20 @@
     transition: none !important;
 }
 
+::-webkit-scrollbar {
+    width: 1em;
+    height: .3em;
+}
+::-webkit-scrollbar-track {
+    background: var(--scrollbar-track-colour, #f1f1f1);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb-colour, #888);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-hover-colour, #555);
+}
+
 * {
     --theme-transition-time: 1s;
     --docker-card-min-width: 18em;
@@ -95,18 +109,18 @@ body[data-popup="true"]>#popup {
     color: var(--font-colour);
 }
 
-#popup h3[name="title"] {
+#popup [name="title"] {
     overflow-x: auto;
     overflow-y: hidden;
 }
 
-#popup input[type="button"][role="submit"] { display: none; }
-#popup input[type="button"][role="ok"] { display: none; }
-#popup input[type="button"][role="cancel"] { display: none; }
+#popup input[role="submit"] { display: none; }
+#popup input[role="ok"] { display: none; }
+#popup input[role="cancel"] { display: none; }
 
-#popup[isForm="true"] input[type="button"][role="submit"] { display: inline-block; }
-#popup[isForm="true"] input[type="button"][role="cancel"] { display: inline-block; }
-#popup[isForm="false"] input[type="button"][role="ok"] { display: inline-block; }
+#popup[isForm="true"] input[role="submit"] { display: inline-block; }
+#popup[isForm="true"] input[role="cancel"] { display: inline-block; }
+#popup[isForm="false"] input[role="ok"] { display: inline-block; }
 
 #popup div[name="elems"] {
     --max-height: 70vh;
@@ -121,6 +135,71 @@ body[data-popup="true"]>#popup {
 #popup div[name="elems"]:not(.ignore-theme), #popup div[name="elems"]:not(.ignore-theme) * {
     color: var(--font-colour);
     font-size: small;
+}
+
+#popup span[name="add_input"] {
+    cursor: pointer;
+    user-select: none;
+}
+
+#popup span[name="add_input"]:hover {
+    --wiggle-start: -15deg;
+    --wiggle-end: 15deg;
+    transform: rotate(var(--wiggle-start, -30deg));
+    animation-name: wiggle;
+    animation-duration: .5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    animation-direction: alternate;
+}
+
+@keyframes wiggle {
+    from {
+        transform: rotate(var(--wiggle-start, -30deg));
+    }
+    to {
+        transform: rotate(var(--wiggle-end, 30deg)); 
+    }
+}
+
+#popup[isForm="true"] form .form-control:valid[type="number"]:not(:placeholder-shown) {
+    background-image: none;
+    border-color: inherit;
+}
+
+#popup [name="elems"]:has(>[monaco-container]) {
+    width: 100vw;
+}
+
+#toasts {
+    position: fixed;
+    right: 1%;
+    bottom: 1%;
+    min-height: 10em;
+}
+
+#toasts .toast {
+    min-width: 350px;
+}
+
+.toast[data-severity="debug"] {
+    background-color: var(--gray);
+}
+
+.toast[data-severity="info"] {
+    background-color: inherit;
+}
+
+.toast[data-severity="warn"] {
+    background-color: var(--yellow);
+}
+
+.toast[data-severity="error"] {
+    background-color: var(--red);
+}
+
+.toast:not([data-severity="info"])>.toast-body * {
+    color: var(--white);
 }
 
 .docker-card {
@@ -193,6 +272,9 @@ body[data-popup="true"]>#popup {
 
 .docker-card>.docker-card-header * {
     --font-colour: white;
+    --scrollbar-track-colour: var(--docker-primary);
+    --scrollbar-thumb-colour: var(--docker-secondary);
+    --scrollbar-hover-colour: var(--docker-secondary);
 }
 
 .docker-card>.docker-card-header>h1,.docker-card>.docker-card-header>h2,.docker-card>.docker-card-header>h3,.docker-card>.docker-card-header>h4,.docker-card>.docker-card-header>h5 {
@@ -202,6 +284,7 @@ body[data-popup="true"]>#popup {
     font-size: inherit !important;
     line-height: initial !important;
     margin: 0;
+    overflow-x: auto;
 }
 
 .docker-card>.docker-card-header>h5 {
@@ -275,29 +358,12 @@ body[data-popup="true"]>#popup {
 }
 
 .docker-card>.docker-card-info table tr>td {
+    --scrollbar-track-colour: var(--docker-secondary);
+    --scrollbar-thumb-colour: var(--docker-primary);
+    --scrollbar-hover-colour: var(--docker-primary);
     padding: .3em;
     overflow-x: auto;
     max-width: 10em;
-}
-
-.docker-card>.docker-card-info table tr>td::-webkit-scrollbar {
-    width: 1em;
-    height: .3em;
-}
-
-/* Track */
-.docker-card>.docker-card-info table tr>td::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-/* Handle */
-.docker-card>.docker-card-info table tr>td::-webkit-scrollbar-thumb {
-    background: #888;
-}
-
-/* Handle on hover */
-.docker-card>.docker-card-info table tr>td::-webkit-scrollbar-thumb:hover {
-    background: #555;
 }
 
 .docker-card>.docker-card-info table tr>td:nth-child(1) {
@@ -372,5 +438,5 @@ body.dark #colour-mode::after {
 
 [monaco-container] {
     height: 100%;
-    width: 100vh;
+    width: 100%;
 }

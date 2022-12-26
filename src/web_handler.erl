@@ -16,7 +16,7 @@ terminate(_Reason, _Req, _State) ->
 %% INTERNAL
 
 handle(Method, [<<"socket">>, <<"direct">> | Tail], Headers, Req0, Opts) ->
-    Path = lists:flatmap(fun erlang:binary_to_list/1, lists:join(<<"/">>, [<<>>|Tail])),
+    Path = [lists:flatmap(fun erlang:binary_to_list/1, lists:join(<<"/">>, [<<>>|Tail])), "?", cowboy_req:qs(Req0)],
 
     AtomMethod = 
         case Method of
