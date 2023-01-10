@@ -337,7 +337,7 @@ if(DEBUG) {
             const elem = `<form class="was-validated">
                 <div class="mb-3">
                     <label class="form-label">Container Name</label>
-                    <input name="container-name" type="text" class="form-control" required>
+                    <input name="container-name" type="text" class="form-control" pattern="/?[a-zA-Z0-9][a-zA-Z0-9_.-]+" data-toggle="tooltip" data-placement="top" title="Container Names should match /?[a-zA-Z0-9][a-zA-Z0-9_.-]+" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Ports <span name="add_input" class="material-symbols-outlined align-text-bottom font-weight-bold">Add</span></label>
@@ -345,7 +345,7 @@ if(DEBUG) {
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Command</label>
-                    <input name="container-command" type="text" class="form-control" value="/bin/echo 'Hello World!'">
+                    <input name="container-command" type="text" class="form-control" value="/bin/echo 'Hello World!'" data-toggle="tooltip" data-placement="top">
                 </div>
             </form>`.toDOMElement();
 
