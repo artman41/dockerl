@@ -30,7 +30,7 @@
                 return;
             let link = document.createElement("link");
             let url = new URL(currentScript.src);
-            let cssPath = [...(url.pathname.split("/").slice(0, url.pathname.lastIndexOf("/") - 1)), "../css/draggable.css"].join("/");
+            let cssPath = [(url.pathname.slice(0, url.pathname.lastIndexOf("/"))), "../css/draggable.css"].join("/");
             link.href = cssPath;
             link.rel = "stylesheet";
             currentScript.before(link);
